@@ -186,4 +186,16 @@ Large payloads are split automatically or trimmed to prevent 1009 message too bi
 
 Both Relay and Feed operate with ping_interval=None to avoid spurious disconnects.
 
+---
+
+🙏 Credits / Acknowledgments
+
+WS-RTD Plugin by NSM51 — for providing the WebSocket-to-AmiBroker interface and ongoing beta support.
+
+Tai Pan Realtime (TPRAccess) — for access to Euronext and European data used in development and testing.
+
+AmiBroker Community — for collaboration, testing feedback, and inspiration for extending real-time workflows.
+
+Special thanks to contributors and testers who helped refine backfill, INFO, and bridge synchronization logic.
+
 © 2025 — TP-WSRTD-Client (Open Integration Project)
