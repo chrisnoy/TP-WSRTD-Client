@@ -67,5 +67,123 @@ All fields are optional, but **Market** should be an integer (0–3) for AmiBrok
 > This code is provided for educational and testing purposes under the MIT license.
 
 ---
+⚙️ Setup Overview
+🧩 System Architecture
+
+The TP-WSRTD-Client consists of two key components:
+
+C# Feed Server (FeedServer.cs)
+
+Connects to Tai Pan Realtime (TPRAccess).
+
+Streams real-time ticks and handles historical backfill (Json-HIST) requests.
+
+Supplies missing Previous Close values from snapshot data (since Tai Pan does not provide this in the live feed).
+
+Supports AmiBroker WS-RTD backfill commands (bffull, bfauto, etc.) with proper chronological chunking.
+
+Python Bridge (bridge.py)
+
+Links the Feed Server with the AmiBroker WS-RTD Plugin.
+
+Forwards real-time quotes (Json-RTD) directly.
+
+Aggregates tick history into 1-minute OHLCV bars for backfill.
+
+Implements INFO metadata injection from a CSV file (Company Name, Alias, ISIN, Market).
+
+Loads up to 173 symbols from cold start, populating AmiBroker’s database automatically.
+---
+Tai Pan Realtime (TPRAccess)
+        │
+        ▼
+ C# Feed Server  →  WebSocket (port 10103)
+        │
+        ▼
+ Python Bridge  →  Relay (port 10101)
+        │
+        ▼
+ AmiBroker WS-RTD Plugin
+---
+
+🧠 Key Features
+
+Chronological backfill using 5-day chunks via GetIntradayChart.
+
+Auto-fill for recent data through bfauto when AmiBroker reopens.
+
+Previous Close (pc) injection for correct breakout calculations.
+
+INFO JSON populates AmiBroker symbol metadata (Full Name, Alias, Market Code, ISIN).
+
+Stable RTQ passthrough (no aggregation or delay).
+
+---
+
+🧾 Typical Workflow
+
+Start the Feed Server:
+
+TPFeedServer.exe
+
+
+Launch the Bridge:
+
+python bridge.py
+
+
+Open AmiBroker → connect the WS-RTD Plugin.
+
+Symbols appear automatically with INFO metadata.
+
+Historical data (up to 30 days) backfills on demand.
+
+---
+
+⚠️ Known Limitations / Notes for Testers
+
+📅 Backfill (HIST)
+
+The Feed Server retrieves 30 days of 1-minute bars using GetIntradayChart() in 5-day chunks.
+
+Only the oldest 9000 bars are sent initially (to avoid AmiBroker overwriting recent data).
+
+AmiBroker automatically issues bfauto to fill the remainder after startup.
+
+bfauto will only execute if a valid timestamp is provided in the request.
+
+🧾 INFO Metadata
+
+INFO JSON is sent at startup and whenever AmiBroker triggers any bf* event.
+
+Market field is numeric (integer), as required by AmiBroker (im field).
+
+CSV headers must include:
+
+Symbol,SymbolNo,FullName,Alias,Address,Market,ISIN
+
+Metadata populates AmiBroker’s Full Name, Alias, Address, ISIN, and Market columns automatically.
+
+💹 Previous Close Handling
+
+Tai Pan’s realtime feed does not supply a PrevClose field per tick.
+
+The Feed Server injects this value from the symbol snapshot, ensuring correct %-change and breakout logic in AmiBroker.
+
+🔁 Restart Behavior
+
+On cold start, the Bridge sends INFO for all symbols automatically.
+
+Restarting AmiBroker will trigger bfauto updates, filling missing bars.
+
+Real-time ticks continue seamlessly from the Feed Server once the Bridge reconnects.
+
+📡 Stability
+
+WebSocket frame size limit (≈ 1 MB) is enforced.
+
+Large payloads are split automatically or trimmed to prevent 1009 message too big errors.
+
+Both Relay and Feed operate with ping_interval=None to avoid spurious disconnects.
 
 © 2025 — TP-WSRTD-Client (Open Integration Project)
