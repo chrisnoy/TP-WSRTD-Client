@@ -186,6 +186,47 @@ Large payloads are split automatically or trimmed to prevent 1009 message too bi
 
 Both Relay and Feed operate with ping_interval=None to avoid spurious disconnects.
 
+
+------🆕 Update — October 2025 (Stable Build)
+
+This update finalises the current WS_RTD Client + Feed architecture for AmiBroker and Euronext trading (via IBKR).
+
+🔹 Highlights
+
+Replaced GetCandleChart() with GetIntradayChart() for native 1-minute bar backfill.
+
+Added feed-side 0.9 s snapshot aggregation, preventing DoS/RETRIEVE loops.
+
+Unified all timestamps to Europe/Paris time, fixing bar alignment and colour timing.
+
+bfauto refinements:
+
+Parameter-less bfauto calls are now ignored for symbols already covered by a bffull (< 10 K bars).
+
+For valid incremental loads, the bridge issues a bfauto aligned to the last bffull bar time.
+
+Accurate per-tick volume injection from TPRMarketDepthMessage (QuoteType == Brief, LastTradeVolume).
+
+Confirmed AmiBroker “Last” column colouring works correctly (handled internally).
+
+Fully stable for 170 + Euronext symbols with IBKR as broker alias.
+
+🔹 Summary
+
+This build provides:
+
+Clean, time-aligned bffull / bfauto backfill
+
+Precise tick-level volume and snapshot aggregation
+
+Smooth, DoS-free RTQ streaming
+
+Verified multi-day stability across Euronext sessions
+
+Big thanks again to @NSM51
+ for the WS_RTD plugin framework and everyone who contributed during testing.
+
+
 ---
 
 🙏 Credits / Acknowledgments
